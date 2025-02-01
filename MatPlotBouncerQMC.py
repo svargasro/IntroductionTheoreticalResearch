@@ -5,14 +5,9 @@ from scipy.special import airy
 
 
 # Fijar la semilla para reproducibilidad
-# seed_value = 47  # Puedes cambiar este valor por cualquier número entero
-# random.seed(seed_value)
-# np.random.seed(seed_value)
-
-
-
-
-
+seed_value = 200  # Puedes cambiar este valor por cualquier número entero
+random.seed(seed_value)
+np.random.seed(seed_value)
 
 
 # Parámetros
@@ -25,7 +20,7 @@ maxel = 0
 nbins = 1000
 xmax= 100
 xmin= 0
-nsamples = 1000000/4
+nsamples = 1000000/10
 anchoInt = (xmax - xmin) / nbins # Cálculo del ancho del intervalo
 
 path = np.zeros(N + 1)  # Inicializar trayectorias
@@ -36,13 +31,12 @@ pdf = np.zeros(nbins)   # Inicializar density probability function
 # Obtener el primer cero de la función de Airy
 x0 = 2.338107410459767  # Primer cero de Ai(x), conocido
 
-_, Ai_prime, _, _ = airy(x0)  # Obtén el valor de Ai'(-z_n)
-N_n = np.sqrt(abs(Ai_prime))    # N_n = sqrt(|Ai'(-z_n)|)
+_, Ai_prime, _, _ = airy(x0)  # Se obtiene el valor de Ai'(-z_n)
+N_n = np.sqrt(abs(Ai_prime))    # N_n = sqrt(|Ai'(-z_n)|) Normalización
 
-# Configurar las gráficas
-fig, axes = plt.subplots(figsize=(8, 10))
 
 # Gráfica de función de onda
+fig, axes = plt.subplots(figsize=(8, 10))
 ax2 = axes
 ax2.set_title("Ground State Probability and Exact Solution")
 ax2.set_xlabel("x")
@@ -61,12 +55,13 @@ def energy(arr):
 
 # Método para graficar la función de onda
 def plotwf(prob):
-    x_vals = np.arange(xmin,xmax,anchoInt) #-AnchoInt?
-    y_vals = prob #* 1250.0/ 100.0
+    x_vals = np.arange(xmin,xmax,anchoInt)
+    y_vals = prob
     wavefunction_line.set_data(x_vals, y_vals)
     ax2.set_xlim(min(x_vals), 10)#max(x_vals))
     ax2.set_ylim(min(y_vals), 0.4)
     fig.savefig("probPlot.pdf")
+
 
 def plot_exact():
     # m=100/1250
@@ -126,14 +121,16 @@ while loopVar:
         loading = counter*100/nsamples
         print(f"Avance: {loading} %")
 
-        conversion = 1.0 / (nsamples * anchoInt)
+        # conversion = 1.0 / (nsamples * anchoInt)
+        conversion = 1.0 / (counter * anchoInt)
 
 
 
 
-        for i in range(nbins):
-            pdfi = prob[i] * conversion
-            pdf[i] = pdfi
+        pdf = prob*conversion
+        # for i in range(nbins):
+        #     pdfi = prob[i] * conversion
+        #     pdf[i] = pdfi
 
         plotwf(pdf)
         plot_exact()  # Graficar la solución exacta
