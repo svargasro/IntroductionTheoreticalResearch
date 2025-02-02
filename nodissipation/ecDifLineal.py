@@ -1,46 +1,50 @@
 import numpy as np
+import scipy.sparse as sp
+import scipy.sparse.linalg as spla
 import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp
 
-# Parámetros de la ecuación
-lambda_1 = 1.0  # Puedes ajustar este valor
-k = 1.0         # Puedes ajustar este valor
+# Parámetros
+lambda1 = 1.0  # Coeficiente lambda_1
+m = 1.0        # Masa
+g = 1.0        # Gravedad
+a = 0.0        # Límite inferior del dominio
+b = 1         # Límite superior del dominio
+k = 3*np.pi/b        # Coeficiente k
+N = 100        # Número de puntos en la discretización
+dx = (b - a) / (N - 1)  # Espaciado en x
+x = np.linspace(a, b, N)  # Dominio espacial
 
-# Definimos la ecuación diferencial
-# Separaremos psi en parte real (u[0]) e imaginaria (u[1])
-def eq_diff(x, u):
-    psi_real, psi_imag = u[0], u[1]
-    dpsi_real_dx = u[2]
-    dpsi_imag_dx = u[3]
+# Matriz A (en formato lista de listas, para facilitar la construcción)
+A = sp.lil_matrix((N, N), dtype=complex)
 
-    d2psi_real_dx2 = -lambda_1 * (2 * x * dpsi_imag_dx + psi_imag) - k**2 * psi_real
-    d2psi_imag_dx2 = lambda_1 * (2 * x * dpsi_real_dx + psi_real) - k**2 * psi_imag
+# Construcción de la matriz A
+for n in range(1, N-1):  # Usamos n en lugar de j para evitar confusiones
+    A[n, n-1] = 1 / dx**2 - 1j * lambda1 * x[n] / (2 * dx)  # Término para psi_{n-1}
+    A[n, n] = -2 / dx**2 + 1j * lambda1 + k**2 #+ m * g * x[n]  # Término para psi_n
+    A[n, n+1] = 1 / dx**2 + 1j * lambda1 * x[n] / (2 * dx)  # Término para psi_{n+1}
 
-    return [dpsi_real_dx, dpsi_imag_dx, d2psi_real_dx2, d2psi_imag_dx2]
+# Condición de contorno ajustada en x = 0
+epsilon_a = 1e-5  # Valor cercano a cero para x = 0
+A[0, 0] = 1  # Fija psi(0) = epsilon_a
+b = np.zeros(N, dtype=complex)
+b[0] = epsilon_a  # Ajusta el vector b para reflejar la condición
 
-# Condiciones iniciales
-x_min, x_max = -10, 10
-psi_real_0 = 0.0  # Parte real inicial de psi en x = 0
-psi_imag_0 = 0.0  # Parte imaginaria inicial de psi en x = 0
-dpsi_real_dx_0 = 0.0  # Derivada inicial de la parte real de psi en x = 0
-dpsi_imag_dx_0 = 0.0  # Derivada inicial de la parte imaginaria de psi en x = 0
+# Condición de contorno ajustada en x = b
+epsilon_b = 1e-5  # Valor cercano a cero para x = b
+n = N - 1  # Índice del último punto
+A[n, n] = 1  # Fija psi(b) = epsilon_b
+b[n] = epsilon_b
 
-# Resolución numérica
-x_eval = np.linspace(x_min, x_max, 1000)  # Puntos donde se evaluará la solución
-sol = solve_ivp(eq_diff, [x_min, x_max], [psi_real_0, psi_imag_0, dpsi_real_dx_0, dpsi_imag_dx_0], t_eval=x_eval)
+# Resolver el sistema lineal A psi = b
+psi = spla.spsolve(A.tocsr(), b)
 
-# Extraemos las soluciones
-x = sol.t
-psi_real = sol.y[0]
-psi_imag = sol.y[1]
+# Calcular la amplitud de probabilidad
+amplitud = np.abs(psi)**2
 
-# Gráfica de la solución
-plt.figure(figsize=(10, 6))
-plt.plot(x, psi_real*psi_imag, label="Re(psi)")
-#plt.plot(x, psi_imag, label="Im(psi)")
-plt.title("Solución de la ecuación diferencial")
-plt.xlabel("x")
-plt.ylabel("psi(x)")
+# Graficar la amplitud de probabilidad
+plt.plot(x, amplitud, label=r"$|\psi(x)|^2$")
 plt.legend()
-plt.grid()
-plt.show()
+plt.xlabel("x")
+plt.ylabel(r"$|\psi(x)|^2$")
+plt.title("Amplitud de probabilidad de la función de onda")
+plt.savefig("sol.pdf")
