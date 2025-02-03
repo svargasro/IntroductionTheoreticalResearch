@@ -8,11 +8,11 @@ lambda1 = 1.0  # Coeficiente lambda_1
 m = 1.0        # Masa
 g = 1.0        # Gravedad
 a = 0.0        # Límite inferior del dominio
-b = 1         # Límite superior del dominio
-k = 3*np.pi/b        # Coeficiente k
+blim = 1         # Límite superior del dominio
+k = (3*np.pi/blim)        # Coeficiente k (Autoenergía)
 N = 100        # Número de puntos en la discretización
-dx = (b - a) / (N - 1)  # Espaciado en x
-x = np.linspace(a, b, N)  # Dominio espacial
+dx = (blim - a) / (N - 1)  # Espaciado en x
+x = np.linspace(a, blim, N)  # Dominio espacial
 
 # Matriz A (en formato lista de listas, para facilitar la construcción)
 A = sp.lil_matrix((N, N), dtype=complex)
@@ -20,7 +20,7 @@ A = sp.lil_matrix((N, N), dtype=complex)
 # Construcción de la matriz A
 for n in range(1, N-1):  # Usamos n en lugar de j para evitar confusiones
     A[n, n-1] = 1 / dx**2 - 1j * lambda1 * x[n] / (2 * dx)  # Término para psi_{n-1}
-    A[n, n] = -2 / dx**2 + 1j * lambda1 + k**2 #+ m * g * x[n]  # Término para psi_n
+    A[n, n] = -2 / dx**2 + 1j * lambda1 + k**2 + m * g * x[n]  # Término para psi_n
     A[n, n+1] = 1 / dx**2 + 1j * lambda1 * x[n] / (2 * dx)  # Término para psi_{n+1}
 
 # Condición de contorno ajustada en x = 0
@@ -34,6 +34,8 @@ epsilon_b = 1e-5  # Valor cercano a cero para x = b
 n = N - 1  # Índice del último punto
 A[n, n] = 1  # Fija psi(b) = epsilon_b
 b[n] = epsilon_b
+
+
 
 # Resolver el sistema lineal A psi = b
 psi = spla.spsolve(A.tocsr(), b)

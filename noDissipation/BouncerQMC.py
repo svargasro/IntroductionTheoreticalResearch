@@ -5,7 +5,7 @@ from scipy.special import airy
 from scipy.integrate import simpson
 
 #Fixed seed.
-# SEED_VALUE = 60
+# SEED_VALUE = #200
 # random.seed(SEED_VALUE)
 # np.random.seed(SEED_VALUE)
 
@@ -15,8 +15,8 @@ dt = 0.0001
 g = 2.0 #gravity
 m = 1.0 #mass
 nbins = 1000 #number of bins in the histogram
-xmin, xmax = 0, 100
-nsamples = 100000 #number of random samples
+xmin, xmax = 0, 80
+nsamples = 100000+10000 #number of random samples
 ancho_int = (xmax - xmin) / nbins #Width of histogram bins
 
 #Arrays initialization
@@ -27,13 +27,13 @@ prob = np.zeros(nbins) #Histogram
 x0 = 2.338107410459767 # First zero of airy function
 
 # Plot inizialization
-fig, ax2 = plt.subplots(figsize=(8, 10))
-ax2.set_title("Ground State Probability and Exact Solution")
-ax2.set_xlabel("x")
+fig, ax2 = plt.subplots(figsize=(8,5))
+ax2.set_title("Probability Density of the Quantum Bouncer without Dissipation")
+ax2.set_xlabel("Position x [arb. units]")
 ax2.set_ylabel(r"$|\psi_0(x)|^2$")
-
-wavefunction_line, = ax2.plot([], [], color='black', linewidth=1, label="Simulated Solution")
-exact_solution_line, = ax2.plot([], [], color='blue', linestyle='--', label="Exact Solution")
+ax2.grid(True)
+wavefunction_line, = ax2.plot([], [], linewidth=1, label="Simulated Solution")
+exact_solution_line, = ax2.plot([], [], linestyle='--', label="Exact Solution")
 ax2.legend()
 
 
@@ -47,7 +47,7 @@ def plotwf(prob): #probability density function plot
     x_vals = np.linspace(xmin, xmax, nbins)
     wavefunction_line.set_data(x_vals, prob)
     ax2.set_xlim(0, 10)
-    ax2.set_ylim(0, np.max(prob))
+    ax2.set_ylim(0, 0.6)
     fig.savefig("probPlot.pdf")
 
 def plot_exact(): #exact solution plot
@@ -55,6 +55,7 @@ def plot_exact(): #exact solution plot
     airy_vals = airy((x_vals - x0))[0] ** 2
     airy_vals= normalize(airy_vals,x_vals)
     exact_solution_line.set_data(x_vals, airy_vals)
+
 
 
 
